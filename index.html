@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Тетрис</title>
+    
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113283804', 'ym');
+
+        ym(113283804, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/113283804" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
@@ -182,7 +197,6 @@
             transform: scale(0.95);
         }
         
-        /* Кнопки управления - ПОДНЯТЫ ВЫШЕ */
         .mobile-controls {
             display: none;
             width: 100%;
@@ -349,7 +363,6 @@
             </div>
         </div>
         
-        <!-- Кнопки управления ПОДНЯТЫ ВЫШЕ -->
         <div class="mobile-controls" id="mobile-controls">
             <div class="controls-row">
                 <div class="dpad">
@@ -387,6 +400,14 @@
     </div>
 
     <script>
+        // === ФУНКЦИЯ ОТПРАВКИ СОБЫТИЙ В ЯНДЕКС.МЕТРИКУ ===
+        function sendTetrisEvent(eventName, params) {
+            if (typeof ym !== 'undefined') {
+                ym(113283804, 'reachGoal', eventName, params);
+                console.log('Метрика Тетрис: отправлено событие', eventName, params);
+            }
+        }
+
         const COLS = 10;
         const ROWS = 16;
         const COLORS = {
@@ -434,7 +455,6 @@
             const rightPanel = 91;
             const availableWidth = screenWidth - rightPanel;
             
-            // Уменьшен резерв высоты - кнопки теперь выше
             const reservedHeight = 175;
             const availableHeight = screenHeight - reservedHeight;
             
@@ -676,6 +696,12 @@
                 }
             }
             if (linesCleared > 0) {
+                // ОТПРАВЛЯЕМ СОБЫТИЕ: Очистка линий (особенно ценно для 3-4 линий)
+                sendTetrisEvent('lines_cleared', {
+                    lines_cleared_at_once: linesCleared,
+                    current_level: level
+                });
+
                 const points = [0, 100, 300, 500, 800];
                 score += points[linesCleared] * level;
                 lines += linesCleared;
@@ -701,9 +727,17 @@
         }
         
         function gameOver() {
-            isGameOver = true; clearInterval(gameInterval);
+            isGameOver = true; 
+            clearInterval(gameInterval);
             document.getElementById('final-score').textContent = score;
             document.getElementById('game-over').style.display = 'block';
+
+            // ОТПРАВЛЯЕМ СОБЫТИЕ: Игра окончена
+            sendTetrisEvent('game_over', {
+                final_score: score,
+                final_level: level,
+                total_lines: lines
+            });
         }
         
         function startGame() {
